@@ -38,7 +38,7 @@ RUN     \
         && ./configure --enable-debug=log \
         && CFLAGS="-ggdb3 -O0" ./configure --enable-debug=full \
         && make \
-        && make install
+        && make install \
         && apk del .build-deps \
         && mkdir -p /etc/dynomite /var/log/dynomite \
         && cp /usr/src/dynomite/conf/dynomite.yml /etc/dynomite/ \
