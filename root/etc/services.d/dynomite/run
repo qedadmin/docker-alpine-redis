@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec /usr/local/bin/dynomite --conf-file=/etc/dynomite/dynomite.yml;
