@@ -66,8 +66,5 @@ EXPOSE  22222
 RUN     echo 'Exposing client port for Dynomite 8102'
 EXPOSE  8102
 
-# Setting overcommit for Redis to be able to do BGSAVE/BGREWRITEAOF
-RUN sysctl vm.overcommit_memory=1
-
 ENTRYPOINT [ "/init" ]
 CMD []
