@@ -16,7 +16,7 @@ RUN     \
         if [ ! -z "$HTTPS_PROXY" ]; then \
             export https_proxy=${HTTPS_PROXY}; \
         fi \
-        && apk add --no-cache openssl tzdata \
+        && apk add --no-cache openssl tzdata bash \
         && apk add --no-cache --virtual .build-deps \
         autoconf \
         automake \
@@ -63,8 +63,8 @@ RUN     echo 'Exposing stats/admin port 22222'
 EXPOSE  22222
 
 # Default port to acccess Dynomite
-RUN     echo 'Exposing client port for Dynomite 8102'
-EXPOSE  8102
+RUN     echo 'Exposing client port for Dynomite 6379'
+EXPOSE  6379
 
 ENTRYPOINT [ "/init" ]
 CMD []
