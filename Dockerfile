@@ -8,6 +8,7 @@ ARG     S6_OVERLAY_ARCH="amd64"
 ADD     https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.gz /tmp/s6-overlay.tar.gz
 ENV     S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
+COPY    root /
 RUN     \
         if [ ! -z "$HTTP_PROXY" ]; then \
             export http_proxy=${HTTP_PROXY}; \
