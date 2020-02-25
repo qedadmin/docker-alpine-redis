@@ -45,6 +45,7 @@ RUN     \
         && cp /usr/src/dynomite/conf/dynomite.yml /etc/dynomite/ \
         && mv /usr/src/dynomite/src/dynomite /usr/local/bin/dynomite \
         && tar xvfz /tmp/s6-overlay.tar.gz -C / \
+        && chmod 0777 /usr/local/bin/redis-bootstrap.sh \
         && rm -rf \
         /usr/src/* \
         /var/cache/apk/* \
