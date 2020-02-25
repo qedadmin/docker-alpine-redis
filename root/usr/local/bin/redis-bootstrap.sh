@@ -6,7 +6,7 @@ DYNOMITE_PORT=6379
 IS_STATEFULSET=1
 ORDINAL=""
 
-[[ `hostname` =~ -([0-9]+)$ ]] ORDINAL=${BASH_REMATCH[1]} || IS_STATEFULSET=0
+[[ `hostname` =~ -([0-9]+)$ ]] && ORDINAL=${BASH_REMATCH[1]} || IS_STATEFULSET=0
 
 # If it is a statefulset, there is a master/replica (assume 2 replicas only)
 if [ "$IS_STATEFULSET" -eq 1 ]; then
