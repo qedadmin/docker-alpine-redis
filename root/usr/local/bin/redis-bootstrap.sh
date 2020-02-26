@@ -30,8 +30,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
 
       # Check whether master exists (try 3 times)
       for i in 1 2 3; do
-        echo "Checking whether ${MASTER} exists.."
-        REDIS_STATUS="$(redis-cli -h ${MASTER} PING)"
+        REDIS_STATUS="$(redis-cli -h ${MASTER} -p $REDIS_PORT PING)"
         if [[ "${REDIS_STATUS}" =~ 'PONG' ]]; then
           MASTER_EXISTS=1
           break
@@ -41,22 +40,26 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
 
       # If master exists, we sync from master, otherwise it will be an empty instance
       if [[ $MASTER_EXISTS -eq 1 ]]; then
+        echo "Master '${MASTER}' exists.."
         # Check whether local dynomite is running
         DYNOMITE_EXISTS=0
         for i in 1 2 3; do
           DYNOMITE_STATUS="$(redis-cli -h localhost -p $DYNOMITE_PORT PING)"
           if [[ "${DYNOMITE_STATUS}" =~ 'PONG' ]]; then
             DYNOMITE_EXISTS=1
+            echo "Local Dynomite instance exists.."
             break
           fi
           sleep 2
         done
         # If dynomite is running, set it to "standby"
         if [[ $DYNOMITE_EXISTS -eq 1 ]]; then
+          echo "Set local Dynomite instance to 'standby'.."
           curl http://localhost:22222/state/standby
         fi
-
+        echo "Executing: redis-cli -p $REDIS_PORT SLAVEOF $MASTER $REDIS_PORT"
         REDIS_SLAVE="$(redis-cli -p $REDIS_PORT SLAVEOF $MASTER $REDIS_PORT)"
+        DONE=0
         while : ; do
           while IFS=$'\n\t' read string; do
             if [[ "$string" =~ 'master_repl_offset:' ]]; then
@@ -67,34 +70,41 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
             fi
           done < <(redis-cli -p $REDIS_PORT info replication)
           OFFSETDIFF=$(( $MASTEROFFSET - $SLAVEOFFSET))
-          echo "master_repl_offset: ${MASTEROFFSET}"
-          echo "slave_repl_offset: ${SLAVEOFFSET}"
+          echo "master/slave offset: ${MASTEROFFSET} / ${SLAVEOFFSET}"
 
           # The difference should be less than 10000
-          if [[ "$OFFSETDIFF" -lt 10000 ]]; then
-            DONE=1
-            # If dynomite is running, set it to "writes_only"
-            if [[ $DYNOMITE_EXISTS -eq 1 ]]; then
-              curl http://localhost:22222/state/writes_only
+          if [[ "$MASTEROFFSET" -gt 0 ]] && [[ "$SLAVEOFFSET" -gt 0 ]]; then
+            if [[ "$OFFSETDIFF" -lt 10000 ]]; then
+              DONE=1
+              # If dynomite is running, set it to "writes_only"
+              if [[ $DYNOMITE_EXISTS -eq 1 ]]; then
+                echo "Set local Dynomite instance to 'writes_only'.."
+                curl http://localhost:22222/state/writes_only
+              fi
             fi
           fi
-          if [ "$DONE" -ne 0 ]; then
+          if [[ "$DONE" -ne 0 ]]; then
             break
           fi
           sleep 2
         done
         # Remove slave
+        echo "Executing: redis-cli -p $REDIS_PORT SLAVEOF NO ONE"
         redis-cli -p $REDIS_PORT SLAVEOF NO ONE
         # If dynomite is running, set it to "normal"
         if [[ $DYNOMITE_EXISTS -eq 1 ]]; then
+          echo "Set local Dynomite instance to 'normal'.."
           curl http://localhost:22222/state/normal
         fi
+      else
+        echo "Master '${MASTER}' no found"
       fi
       # Completed
       COMPLETED=1
     fi
 
-    if [ "$COMPLETED" -ne 0 ]; then
+    if [[ "$COMPLETED" -ne 0 ]]; then
+        echo "Completed."
         break
     fi
     sleep 1
