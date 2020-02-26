@@ -22,7 +22,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
   COMPLETED=0
   while : ; do
     # Check whether local Redis is running
-    LOCAL_REDIS_STATUS="$(redis-cli -h localhost -p $REDIS_PORT PING)"
+    LOCAL_REDIS_STATUS="$(/usr/local/bin/redis-cli -h localhost -p $REDIS_PORT PING)"
     if [[ "${LOCAL_REDIS_STATUS}" =~ 'PONG' ]]; then
       MASTEROFFSET=0
       SLAVEOFFSET=0
@@ -30,7 +30,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
 
       # Check whether master exists (try 3 times)
       for i in 1 2 3; do
-        REDIS_STATUS="$(redis-cli -h ${MASTER} -p $REDIS_PORT PING)"
+        REDIS_STATUS="$(/usr/local/bin/redis-cli -h ${MASTER} -p $REDIS_PORT PING)"
         if [[ "${REDIS_STATUS}" =~ 'PONG' ]]; then
           MASTER_EXISTS=1
           break
@@ -44,7 +44,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
         # Check whether local dynomite is running
         DYNOMITE_EXISTS=0
         for i in 1 2 3; do
-          DYNOMITE_STATUS="$(redis-cli -h localhost -p $DYNOMITE_PORT PING)"
+          DYNOMITE_STATUS="$(/usr/local/bin/redis-cli -h localhost -p $DYNOMITE_PORT PING)"
           if [[ "${DYNOMITE_STATUS}" =~ 'PONG' ]]; then
             DYNOMITE_EXISTS=1
             echo "Local Dynomite instance exists.."
@@ -58,7 +58,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
           curl http://localhost:22222/state/standby
         fi
         echo "Executing: redis-cli -p $REDIS_PORT SLAVEOF $MASTER $REDIS_PORT"
-        REDIS_SLAVE="$(redis-cli -p $REDIS_PORT SLAVEOF $MASTER $REDIS_PORT)"
+        REDIS_SLAVE="$(/usr/local/bin/redis-cli -p $REDIS_PORT SLAVEOF $MASTER $REDIS_PORT)"
         DONE=0
         while : ; do
           while IFS=$'\n\t' read string; do
@@ -68,7 +68,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
             if [[ "$string" =~ 'slave_repl_offset:' ]]; then
                 SLAVEOFFSET=($(echo "${string}" | grep 'slave_repl_offset:' | awk -F: '{print $2}' | grep -o "[0-9]*"))
             fi
-          done < <(redis-cli -p $REDIS_PORT info replication)
+          done < <(/usr/local/bin/redis-cli -p $REDIS_PORT info replication)
           OFFSETDIFF=$(( $MASTEROFFSET - $SLAVEOFFSET))
           echo "master/slave offset: ${MASTEROFFSET} / ${SLAVEOFFSET}"
 
@@ -90,7 +90,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
         done
         # Remove slave
         echo "Executing: redis-cli -p $REDIS_PORT SLAVEOF NO ONE"
-        redis-cli -p $REDIS_PORT SLAVEOF NO ONE
+        /usr/local/bin/redis-cli -p $REDIS_PORT SLAVEOF NO ONE
         # If dynomite is running, set it to "normal"
         if [[ $DYNOMITE_EXISTS -eq 1 ]]; then
           echo "Set local Dynomite instance to 'normal'.."
