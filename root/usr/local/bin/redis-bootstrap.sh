@@ -84,6 +84,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
             fi
           fi
           if [[ "$DONE" -ne 0 ]]; then
+            sleep 3
             break
           fi
           sleep 2
@@ -105,6 +106,7 @@ if [ "$IS_STATEFULSET" -eq 1 ]; then
 
     if [[ "$COMPLETED" -ne 0 ]]; then
         echo "Completed."
+        curl http://localhost:22222/state/get_state
         break
     fi
     sleep 1
