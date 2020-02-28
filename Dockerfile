@@ -17,11 +17,10 @@ RUN     \
         if [ ! -z "$HTTPS_PROXY" ]; then \
             export https_proxy=${HTTPS_PROXY}; \
         fi \
-        && apk add --no-cache curl openssl tzdata bash \
+        && apk add --no-cache bind-tools curl openssl tzdata bash \
         && apk add --no-cache --virtual .build-deps \
         autoconf \
         automake \
-        bind-tools \
         build-base \
         git \
         gcc \
