@@ -21,6 +21,7 @@ RUN     \
         && apk add --no-cache --virtual .build-deps \
         autoconf \
         automake \
+        bind-tools \
         build-base \
         git \
         gcc \
