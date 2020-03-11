@@ -1,4 +1,5 @@
 ARG     REDIS_TAG=5-alpine
+ARG     DYNOMITE_VERSION=v0.7.0
 FROM    redis:${REDIS_TAG}
 ARG     HTTP_PROXY
 ARG     HTTPS_PROXY
@@ -35,6 +36,7 @@ RUN     \
         && cd /usr/src \
         && git clone https://github.com/Netflix/dynomite.git \
         && cd /usr/src/dynomite \
+        && git checkout tags/${DYNOMITE_VERSION} \
         && autoreconf -fvi \
         && ./configure --enable-debug=log \
         && CFLAGS="-ggdb3 -O0" ./configure --enable-debug=full \
