@@ -36,7 +36,7 @@ RUN     \
         && cd /usr/src \
         && git clone https://github.com/Netflix/dynomite.git \
         && cd /usr/src/dynomite \
-        && git checkout tags/${DYNOMITE_VERSION} \
+        && git checkout -b tags/${DYNOMITE_VERSION} \
         && autoreconf -fvi \
         && ./configure --enable-debug=log \
         && CFLAGS="-ggdb3 -O0" ./configure --enable-debug=full \
